@@ -1,0 +1,308 @@
+<Window x:Class="Filmoteka.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:Filmoteka.Controls"
+        Title="Филмотека"
+        Width="1400" Height="860" MinWidth="1120" MinHeight="660"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource CinemaWindow}"
+        Loaded="Window_Loaded"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- Карта на филм в изгледа „Карти“ -->
+        <Style x:Key="CardItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Card" Background="{StaticResource Surface2Brush}" BorderBrush="Transparent"
+                                BorderThickness="2" CornerRadius="14" Padding="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Card" Property="Background" Value="{StaticResource Surface3Brush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="26,20,26,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ================= ЗАГЛАВИЕ ================= -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border Width="48" Height="48" CornerRadius="13" Background="{StaticResource AccentBrush}" VerticalAlignment="Center">
+                <Path Width="24" Height="24" Stretch="Uniform" Fill="{StaticResource OnAccentBrush}"
+                      Data="M18,4 L20,8 H17 L15,4 H13 L15,8 H12 L10,4 H8 L10,8 H7 L5,4 H4 C2.9,4 2,4.9 2,6 V18 C2,19.1 2.9,20 4,20 H20 C21.1,20 22,19.1 22,18 V4 Z" />
+            </Border>
+
+            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Филмотека" FontSize="27" FontWeight="Bold" />
+                <TextBlock x:Name="StatsText" Text="Зареждане…" FontSize="13" Foreground="{StaticResource MutedBrush}" Margin="0,1,0,0" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Жанрове" Click="Genres_Click" Margin="0,0,8,0" ToolTip="Добавяне, преименуване и изтриване на жанрове" />
+                <Button Content="Настройки" Click="Settings_Click" ToolTip="TMDB API ключ и местоположение на базата" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= ЛЕНТА С ИНСТРУМЕНТИ ================= -->
+        <Grid Grid.Row="1" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="SearchBox" Width="310" Tag="Търсене по заглавие или режисьор…  (Ctrl+F)"
+                     TextChanged="SearchBox_TextChanged" />
+
+            <ComboBox x:Name="GenreFilter" Grid.Column="1" Width="190" Margin="10,0,0,0"
+                      DisplayMemberPath="Name" SelectionChanged="GenreFilter_SelectionChanged"
+                      ToolTip="Филтър по жанр" />
+
+            <ComboBox x:Name="SortBox" Grid.Column="2" Width="200" Margin="10,0,0,0"
+                      SelectionChanged="SortBox_SelectionChanged" ToolTip="Подреждане">
+                <ComboBoxItem Content="Подреди по заглавие" IsSelected="True" />
+                <ComboBoxItem Content="Подреди по година" />
+                <ComboBoxItem Content="Подреди по оценка" />
+                <ComboBoxItem Content="Последно добавени" />
+            </ComboBox>
+
+            <Border Grid.Column="3" Margin="10,0,0,0" Padding="3" CornerRadius="10"
+                    Background="{StaticResource Surface2Brush}" BorderBrush="{StaticResource BorderLineBrush}" BorderThickness="1">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="TableViewButton" Content="Таблица" GroupName="ViewMode" IsChecked="True"
+                                 Style="{StaticResource SegmentButton}" Checked="ViewMode_Checked" />
+                    <RadioButton x:Name="CardsViewButton" Content="Карти" GroupName="ViewMode"
+                                 Style="{StaticResource SegmentButton}" Checked="ViewMode_Checked" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Column="5" Orientation="Horizontal">
+                <Button x:Name="FetchPostersButton" Content="Постери от TMDB" Margin="0,0,8,0" Click="FetchPosters_Click"
+                        ToolTip="Изтегля постери и описания за филмите, които още нямат" />
+                <Button Content="+  Добави филм" Style="{StaticResource AccentButton}" Click="Add_Click" ToolTip="Ctrl+N" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= СЪДЪРЖАНИЕ ================= -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="344" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Списък с филми -->
+            <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderLineBrush}"
+                    BorderThickness="1" CornerRadius="16" Padding="6">
+                <Grid>
+                    <DataGrid x:Name="MoviesGrid" IsSynchronizedWithCurrentItem="True"
+                              MouseDoubleClick="List_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="" Width="66" CanUserSort="False" CanUserResize="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Width="40" Height="60" Margin="0,7">
+                                            <Border CornerRadius="6" Background="{StaticResource PlaceholderBrush}">
+                                                <TextBlock Text="{Binding Initials}" FontSize="17" FontWeight="Bold"
+                                                           Foreground="{StaticResource MutedBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <Border CornerRadius="6">
+                                                <Border.Background>
+                                                    <ImageBrush ImageSource="{Binding PosterImage}" Stretch="UniformToFill" />
+                                                </Border.Background>
+                                            </Border>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="ЗАГЛАВИЕ" Width="2*" SortMemberPath="Title">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="РЕЖИСЬОР" Width="1.5*" Binding="{Binding Director}" />
+
+                            <DataGridTextColumn Header="ГОДИНА" Width="86" Binding="{Binding Year}" />
+
+                            <DataGridTemplateColumn Header="ЖАНР" Width="150" SortMemberPath="GenreName">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="11" Padding="10,3" HorizontalAlignment="Left"
+                                                Background="{StaticResource Surface3Brush}">
+                                            <TextBlock Text="{Binding GenreName}" FontSize="12" Foreground="{StaticResource SoftTextBrush}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="ОЦЕНКА" Width="214" SortMemberPath="Rating">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <c:StarRating Value="{Binding Rating, Mode=OneWay}" StarSize="12"
+                                                          IsReadOnly="True" IsHitTestVisible="False" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding RatingText}" FontSize="12" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <ListBox x:Name="MoviesCards" Visibility="Collapsed" Background="Transparent" BorderThickness="0"
+                             IsSynchronizedWithCurrentItem="True" ItemContainerStyle="{StaticResource CardItem}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             MouseDoubleClick="List_MouseDoubleClick">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Width="164">
+                                    <Grid Height="246">
+                                        <Border CornerRadius="10" Background="{StaticResource PlaceholderBrush}">
+                                            <TextBlock Text="{Binding Initials}" FontSize="52" FontWeight="Bold"
+                                                       Foreground="{StaticResource MutedBrush}" Opacity="0.6"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <Border CornerRadius="10">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="{Binding PosterImage}" Stretch="UniformToFill" />
+                                            </Border.Background>
+                                        </Border>
+                                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"
+                                                CornerRadius="8" Padding="8,3" Background="#D90E0F13"
+                                                Visibility="{Binding IsRated, Converter={StaticResource BoolToVis}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="★" Foreground="{StaticResource AccentBrush}" Margin="0,0,4,0" />
+                                                <TextBlock Text="{Binding Rating}" FontWeight="Bold" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
+                                               Margin="2,10,2,0" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Subtitle}" FontSize="12" Margin="2,2,2,2"
+                                               Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+                        <TextBlock Text="Няма намерени филми" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <TextBlock Text="Променете търсенето или филтъра, или добавете нов филм."
+                                   Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Детайли за избрания филм -->
+            <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderLineBrush}"
+                    BorderThickness="1" CornerRadius="16">
+                <Grid>
+                    <TextBlock x:Name="NoSelectionText" Text="Изберете филм от списъка" Foreground="{StaticResource MutedBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                    <ScrollViewer x:Name="DetailPanel" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                        <StackPanel Margin="22">
+                            <Grid Height="430">
+                                <Grid.Effect>
+                                    <DropShadowEffect BlurRadius="28" ShadowDepth="8" Direction="270" Opacity="0.6" Color="Black" />
+                                </Grid.Effect>
+                                <Border CornerRadius="14" Background="{StaticResource PlaceholderBrush}">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Initials}" FontSize="96" FontWeight="Bold" Opacity="0.5"
+                                                   Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Няма постер" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                                <Border CornerRadius="14">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="{Binding PosterImage}" Stretch="UniformToFill" />
+                                    </Border.Background>
+                                </Border>
+                            </Grid>
+
+                            <TextBlock Text="{Binding Title}" FontSize="23" FontWeight="Bold" TextWrapping="Wrap" Margin="0,22,0,4" />
+                            <TextBlock Text="{Binding Subtitle}" FontSize="14" Foreground="{StaticResource MutedBrush}" />
+
+                            <TextBlock Text="РЕЖИСЬОР" Style="{StaticResource FieldLabel}" Margin="0,20,0,4" />
+                            <TextBlock Text="{Binding Director}" FontSize="14" TextWrapping="Wrap" />
+
+                            <TextBlock Text="ТВОЯТА ОЦЕНКА" Style="{StaticResource FieldLabel}" Margin="0,20,0,8" />
+                            <StackPanel Orientation="Horizontal">
+                                <c:StarRating x:Name="DetailRating" Value="{Binding Rating, Mode=OneWay}" StarSize="20" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding RatingText}" FontSize="15" FontWeight="Bold" Margin="8,0,0,0"
+                                           Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="Кликнете звезда, за да оцените. Повторен клик върху същата звезда изчиства оценката."
+                                       FontSize="11" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,7,0,0" />
+
+                            <StackPanel Visibility="{Binding HasOverview, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="ОПИСАНИЕ" Style="{StaticResource FieldLabel}" Margin="0,20,0,4" />
+                                <TextBlock Text="{Binding Overview}" TextWrapping="Wrap" LineHeight="20" Foreground="{StaticResource SoftTextBrush}" />
+                            </StackPanel>
+
+                            <UniformGrid Columns="2" Margin="0,24,0,0">
+                                <Button Content="Редактирай" Margin="0,0,5,0" Click="Edit_Click" ToolTip="F2 или двоен клик" />
+                                <Button Content="Изтрий" Margin="5,0,0,0" Style="{StaticResource DangerButton}" Click="Delete_Click" ToolTip="Delete" />
+                            </UniformGrid>
+                            <Button Content="Обнови постер и описание от TMDB" Margin="0,8,0,0" Style="{StaticResource GhostButton}"
+                                    Click="RefreshFromTmdb_Click" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ================= ЛЕНТА ЗА СЪСТОЯНИЕ ================= -->
+        <Grid Grid.Row="3" Margin="2,12,2,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="StatusText" FontSize="12" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,0,16,0" />
+            <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource MutedBrush}" Opacity="0.7"
+                       Text="Ctrl+N нов филм  ·  F2 редакция  ·  Delete изтриване  ·  Ctrl+F търсене" />
+        </Grid>
+    </Grid>
+</Window>

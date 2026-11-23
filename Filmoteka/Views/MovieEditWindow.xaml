@@ -1,0 +1,171 @@
+<Window x:Class="Filmoteka.Views.MovieEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:Filmoteka.Controls"
+        Title="Нов филм"
+        Width="1060" Height="790" MinWidth="940" MinHeight="660"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Style="{StaticResource CinemaWindow}">
+
+    <Grid Margin="26,22,26,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Заглавие на прозореца -->
+        <StackPanel Margin="0,0,0,18">
+            <TextBlock x:Name="HeaderText" Text="Нов филм" FontSize="25" FontWeight="Bold" />
+            <TextBlock Text="Попълнете данните ръчно или потърсете филма в TMDB – постерът, годината, режисьорът и описанието ще се попълнят автоматично."
+                       Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="290" />
+                <ColumnDefinition Width="26" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Постер -->
+            <StackPanel>
+                <Grid Height="435">
+                    <Grid.Effect>
+                        <DropShadowEffect BlurRadius="26" ShadowDepth="8" Direction="270" Opacity="0.6" Color="Black" />
+                    </Grid.Effect>
+                    <Border CornerRadius="14" Background="{StaticResource PlaceholderBrush}">
+                        <StackPanel VerticalAlignment="Center">
+                            <Path Width="54" Height="54" Stretch="Uniform" Fill="{StaticResource MutedBrush}" Opacity="0.5"
+                                  Data="M18,4 L20,8 H17 L15,4 H13 L15,8 H12 L10,4 H8 L10,8 H7 L5,4 H4 C2.9,4 2,4.9 2,6 V18 C2,19.1 2.9,20 4,20 H20 C21.1,20 22,19.1 22,18 V4 Z" />
+                            <TextBlock Text="Няма постер" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" Margin="0,10,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border CornerRadius="14">
+                        <Border.Background>
+                            <ImageBrush x:Name="PosterBrush" Stretch="UniformToFill" />
+                        </Border.Background>
+                    </Border>
+                </Grid>
+                <TextBlock x:Name="PosterInfo" FontSize="12" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" TextAlignment="Center" Margin="0,14,0,6" />
+                <Button x:Name="RemovePosterButton" Content="Премахни постера" Style="{StaticResource GhostButton}"
+                        HorizontalAlignment="Center" Click="RemovePoster_Click" />
+            </StackPanel>
+
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,6,0">
+
+                    <!-- Търсене в TMDB -->
+                    <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderLineBrush}"
+                            BorderThickness="1" CornerRadius="14" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Търсене в TMDB" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TmdbQuery" Tag="Заглавие на филма (на български или английски)…"
+                                         PreviewKeyDown="TmdbQuery_PreviewKeyDown" />
+                                <Button x:Name="TmdbSearchButton" Grid.Column="1" Content="Търси" Margin="8,0,0,0"
+                                        Style="{StaticResource AccentButton}" Click="TmdbSearch_Click" />
+                            </Grid>
+                            <TextBlock x:Name="TmdbStatus" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                                       TextWrapping="Wrap" Margin="2,8,0,0"
+                                       Text="Въведете заглавие и натиснете Enter. Изберете резултат, за да попълните формата." />
+                            <ListBox x:Name="TmdbResults" Height="176" Margin="0,8,0,0" Background="Transparent" BorderThickness="0"
+                                     ItemContainerStyle="{StaticResource SoftListItem}"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     SelectionChanged="TmdbResults_SelectionChanged">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="34" Height="51" CornerRadius="4" Background="{StaticResource PlaceholderBrush}">
+                                                <Image Source="{Binding ThumbUrl}" Stretch="UniformToFill" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Info}" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                                                           TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Форма -->
+                    <Grid Margin="0,20,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,14">
+                            <TextBlock Text="ЗАГЛАВИЕ *" Style="{StaticResource FieldLabel}" />
+                            <TextBox x:Name="TitleBox" MaxLength="200" Tag="напр. Кръстникът" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,14">
+                            <TextBlock Text="РЕЖИСЬОР *" Style="{StaticResource FieldLabel}" />
+                            <TextBox x:Name="DirectorBox" MaxLength="150" Tag="напр. Франсис Форд Копола" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,14">
+                            <TextBlock Text="ГОДИНА *" Style="{StaticResource FieldLabel}" />
+                            <TextBox x:Name="YearBox" MaxLength="4" Tag="напр. 1972" PreviewTextInput="YearBox_PreviewTextInput" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,14">
+                            <TextBlock Text="ЖАНР *" Style="{StaticResource FieldLabel}" />
+                            <ComboBox x:Name="GenreBox" DisplayMemberPath="Name" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,14">
+                            <TextBlock Text="ОЦЕНКА" Style="{StaticResource FieldLabel}" />
+                            <StackPanel Orientation="Horizontal" Height="38">
+                                <c:StarRating x:Name="RatingStars" StarSize="17" VerticalAlignment="Center" />
+                                <TextBlock x:Name="RatingLabel" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
+                                           VerticalAlignment="Center" Margin="6,0,0,0" MinWidth="40" />
+                                <Button Content="Изчисти" Style="{StaticResource GhostButton}" Padding="8,4"
+                                        VerticalAlignment="Center" Click="ClearRating_Click" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Grid.ColumnSpan="3">
+                            <TextBlock Text="ОПИСАНИЕ" Style="{StaticResource FieldLabel}" />
+                            <TextBox x:Name="OverviewBox" Height="96" AcceptsReturn="True" TextWrapping="Wrap"
+                                     VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" MaxLength="2000"
+                                     Tag="Кратко описание на сюжета (по желание)" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Грешки при валидация -->
+                    <Border x:Name="ErrorBox" Background="{StaticResource DangerSoftBrush}" CornerRadius="10" Padding="14,10"
+                            Margin="0,16,0,0" Visibility="Collapsed">
+                        <TextBlock x:Name="ErrorText" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" LineHeight="20" />
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Бутони -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="Отказ" IsCancel="True" MinWidth="110" Margin="0,0,10,0" />
+            <Button Content="Запази" Style="{StaticResource AccentButton}" MinWidth="140" Click="Save_Click" />
+        </StackPanel>
+    </Grid>
+</Window>
